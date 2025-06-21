@@ -1,0 +1,9 @@
+# Python venv
+env/
+# Jupyter checkpoints
+**/.ipynb_checkpoints
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+# VS Code settings
+.vscode/
