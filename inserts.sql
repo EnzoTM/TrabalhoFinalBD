@@ -154,23 +154,36 @@ CROSS JOIN cnt
 JOIN profs p
   ON p.rn = ((gs - 1) % cnt.total) + 1;                   -- ciclo para distribuir chefias
 
--- gera cursos fictícios com código 'C001' a 'C500'
+-- gera cursos fictícios com código 'CURSO001' a 'CURSO100'
 -- carga horária e vagas aleatórias, nível aleatório entre Grad, Pos e Extensão
--- Atribui id_sala aleatório (supõe que salas existam com ids compatíveis), departamento randômico e UnidadeEscolar aleatória entre códigos 01U a 10U
+-- Atribui id_sala aleatório, departamento e UnidadeEscolar aleatórios
 INSERT INTO Curso(
   codigo, nome, carga_horaria, total_vagas, nivel,
   id_sala, codigoDepartamento, codigoUnidadeEscolar
 )
 SELECT
-  'C' || LPAD(gs::text,3,'0'),                            
-  'Curso ' || gs,                                        
-  (floor(random()*200)+20)::int,                          -- carga horária entre 20 e 219 horas
-  (floor(random()*100)+10)::int,                          -- vagas entre 10 e 109
-  (array['Grad','Pos','Ext'])[floor(random()*3)+1],       -- nível de ensino aleatório
-  (floor(random()*100)+1)::int,                           -
-  (SELECT codigo FROM DepartamentoAcademico ORDER BY random() LIMIT 1),  
-  lpad((floor(random()*10)+1)::text, 2, '0') || 'U'       -- vincula UnidadeEscolar 01U a 10U aleatória
-FROM generate_series(1,500) AS gs;
+  'CURSO' || LPAD(gs::text, 3, '0'),                      -- CURSO001, CURSO002, ..., CURSO100
+  'Curso ' || gs || ' - ' || 
+  CASE 
+    WHEN gs % 10 = 1 THEN 'Ciência da Computação'
+    WHEN gs % 10 = 2 THEN 'Engenharia de Software'
+    WHEN gs % 10 = 3 THEN 'Sistemas de Informação'
+    WHEN gs % 10 = 4 THEN 'Matemática'
+    WHEN gs % 10 = 5 THEN 'Física'
+    WHEN gs % 10 = 6 THEN 'Química'
+    WHEN gs % 10 = 7 THEN 'Biologia'
+    WHEN gs % 10 = 8 THEN 'História'
+    WHEN gs % 10 = 9 THEN 'Geografia'
+    ELSE 'Filosofia'
+  END,
+  (floor(random()*200)+180)::int,                          -- carga horária entre 180 e 379 horas
+  (floor(random()*50)+30)::int,                            -- vagas entre 30 e 79
+  (array['Grad','Pos','Ext'])[floor(random()*3)+1],        -- nível de ensino aleatório
+  (floor(random()*100)+1)::int,                            -- sala aleatória entre 1 e 100
+  (SELECT codigo FROM DepartamentoAcademico ORDER BY random() LIMIT 1),  -- departamento aleatório
+  lpad((floor(random()*10)+1)::text, 2, '0') || 'U'        -- vincula UnidadeEscolar 01U a 10U aleatória
+FROM generate_series(1,100) AS gs;                         -- gera 100 cursos
+
 
 -- insere 500 disciplinas vinculadas a professor e unidade escolar
 -- Usa CTEs para gerar slots e embaralhar professores para distribuir responsabilidades
@@ -207,6 +220,24 @@ SELECT
   m.nomeProfessor, m.sobrenomeProfessor, m.telefoneProfessor  -- professor responsável aleatório
 FROM disc d
 JOIN mix  m ON m.rn = d.idx;                               -- associa cada disciplina a um professor embaralhado
+
+
+-- CursoTemDisciplina (Curso <-> Disciplina)
+-- Cada curso terá entre 5-12 disciplinas aleatórias
+INSERT INTO CursoTemDisciplina(codigoCurso, codigoDisciplina)
+SELECT DISTINCT
+  c.codigo AS codigoCurso,
+  d.codigo AS codigoDisciplina
+FROM Curso c
+CROSS JOIN LATERAL (
+  -- Cada curso terá entre 5-12 disciplinas aleatórias
+  SELECT codigo 
+  FROM Disciplina 
+  ORDER BY random() 
+  LIMIT (5 + (ABS(HASHTEXT(c.codigo)) % 8))              -- Entre 5 e 12 disciplinas por curso
+) d
+ON CONFLICT DO NOTHING;
+
 
 -- insere 200 mensagens com remetente aleatório (aluno/professor/funcionário)
 -- e usando LATERAL JOIN para obter um remetente válido (Aluno, Professor ou Funcionário) conforme o tipo
@@ -364,18 +395,6 @@ SELECT
   c.codigo
 FROM Infraestrutura i
 CROSS JOIN Curso c
-ORDER BY random()
-LIMIT 1000
-ON CONFLICT DO NOTHING;
-
--- CursoTemDisciplina (Curso < - > Disciplina)
--- ON CONFLICT evita duplicar vínculo.
-INSERT INTO CursoTemDisciplina(codigoCurso, codigoDisciplina)
-SELECT
-  c.codigo,
-  d.codigo
-FROM Curso c
-CROSS JOIN Disciplina d
 ORDER BY random()
 LIMIT 1000
 ON CONFLICT DO NOTHING;
