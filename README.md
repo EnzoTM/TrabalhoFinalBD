@@ -4,6 +4,8 @@ Este repositório contém o trabalho final da disciplina de Banco de Dados.
 
 - **Diagrama ER**: [Google Drive](https://drive.google.com/file/d/1vUCdp6B-5I2eiRN8RoiN-oFA1N8Vyzxp/view?usp=sharing)
 
+Grupo: 21
+
 ## Pré-requisitos
 
 1. **Docker** e **Docker Compose** instalados na sua máquina.
