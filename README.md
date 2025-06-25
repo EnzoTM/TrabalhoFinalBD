@@ -3,7 +3,6 @@
 Este repositório contém o trabalho final da disciplina de Banco de Dados.
 
 - **Diagrama ER**: [Google Drive](https://drive.google.com/file/d/1vUCdp6B-5I2eiRN8RoiN-oFA1N8Vyzxp/view?usp=sharing)
-- **Texto de apoio**: [Docs Google](https://docs.google.com/document/d/1e4xZNxe50-gobnc_U4ud_tMwIYvJmXx4e2RbUsPv7nQ/edit?tab=t.eychj0st3rta)
 
 ## Pré-requisitos
 
